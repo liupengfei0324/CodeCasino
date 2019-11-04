@@ -2,24 +2,13 @@ package com.thundersoft.codecasino;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.annotation.Retention;
 import java.net.Socket;
-import java.util.Random;
 import java.util.Scanner;
 
 
 public class Client extends Thread{
+	PacManIndex pacManIndex = new PacManIndex();
 	boolean change = true;
-	//下一步的动作
-	private int step = 3;
-	//处理后的地图返回数据
-	private String formatString;
-	//当前吃豆人位置
-	int index = 0;
-	int one = 1;
-	int two = 2;
-	int three = 3;
-	int four = 4;
 	boolean isSendKey = true;
 	Scanner scanner = null;
 	OutputStream outputStream = null;
@@ -48,14 +37,14 @@ public class Client extends Thread{
 					if("OK".equals(str)) {
 						continue;
 					}else if (str.length() == 227) {//取出返回数据的地图数据
-						formatString = str.substring(1, str.length()-1);//数据去头尾[]
-						if (isSendKey) {
+						pacManIndex.formatString = str.substring(1, str.length()-1);//数据去头尾[]
+						if (isSendKey) {//发送key值
 							outputStream.write("(feb9945c4df3434aa9b8b202e7541b1e)".getBytes());
 							outputStream.flush();
 							isSendKey = false;
 						}
-						System.out.println(formatString);
-						switch(getNumber()) {
+						System.out.println(pacManIndex.formatString);
+						switch(pacManIndex.getNumber()) {
 						case 1:
 							outputStream.write("[w]".getBytes());
 							outputStream.flush();
@@ -79,164 +68,6 @@ public class Client extends Thread{
 			} catch (Exception e) {
 				// TODO: handle exception
 			}
-		
-	}
-	
-	private int getNumber() {
-		int index = getIndexOfMine();
-		//判断是否位于四角
-		if (index == 0) {
-			if (String.valueOf(formatString.charAt(1)).equals("9")) {
-				return 3;
-			}else if (String.valueOf(formatString.charAt(15)).equals("9")) {
-				return 4;
-			}else {
-				return 3;
-			}
-		}else if (index == 14) {
-			if (String.valueOf(formatString.charAt(index-1)).equals("9")) {
-				return 3;
-			}else if (String.valueOf(formatString.charAt(index+15)).equals("9")) {
-				return 4;
-			}else {
-				return 2;
-			}
-		}else if (index == 210) {
-			if (String.valueOf(formatString.charAt(index+1)).equals("9")) {
-				return 1;
-			}else if (String.valueOf(formatString.charAt(index-15)).equals("9")) {
-				return 4;
-			}else {
-				return 4;
-			}
-		}else if (index == 224) {
-			if (String.valueOf(formatString.charAt(index-1)).equals("9")) {
-				return 1;
-			}else if (String.valueOf(formatString.charAt(index-15)).equals("9")) {
-				return 2;
-			}else {
-				return getRandomOf123();
-			}
-		}else if (index%15 == 0) {
-			//判断是否位于左边
-			if (String.valueOf(formatString.charAt(index+15)).equals("9")) {
-				return 4;
-			}else if (String.valueOf(formatString.charAt(index+1)).equals("9")) {
-				return 3;
-			}else {
-				return 3;
-			}
-		}else if ((index+1)%15 == 0) {
-			//判断是否位于右边
-			if (String.valueOf(formatString.charAt(index+15)).equals("9")) {
-				if (String.valueOf(formatString.charAt(index-1)).equals("9")) {
-					return 1;
-				} else {
-					return 2;
-				}
-			}else if (String.valueOf(formatString.charAt(index-1)).equals("9")) {
-				return 3;
-			}else {
-				return getRandomOf123();
-			}
-		}else if (index > 0 && index < 14) {
-			//判断是否位于上边
-			if (String.valueOf(formatString.charAt(index+1)).equals("9")) {
-				return 3;
-			}else if (String.valueOf(formatString.charAt(index+15)).equals("9")) {
-				return 4;
-			}else {
-				return 3;
-			}
-		}
-		else if (index > 210 && index < 224) {
-			//判断是否位于下边
-			if (String.valueOf(formatString.charAt(index+1)).equals("9")) {
-				if (String.valueOf(formatString.charAt(index-15)).equals("9")) {
-					return 4;
-				} else {
-					return 1;
-				}
-			}else if (String.valueOf(formatString.charAt(index-15)).equals("9")) {
-				return 4;
-			}else {
-				if (String.valueOf(formatString.charAt(index+1)).equals("9")) {
-					return 1;
-				}
-				return getRandomOf14();
-			}
-		}else {
-			//位于非边上位置
-			if (String.valueOf(formatString.charAt(index-15)).equals("9")) {
-				if(String.valueOf(formatString.charAt(index+1)).equals("9")) {
-					if(String.valueOf(formatString.charAt(index-1)).equals("9")) {
-						return 3;
-					} else {
-						return 2;
-					}
-				} else {
-					if (String.valueOf(formatString.charAt(index-1)).equals("9")) {
-						return 3;
-					} else {
-						return 4;
-					}
-				}
-			}else if (String.valueOf(formatString.charAt(index+15)).equals("9")) {
-				return 4;
-			}else if (String.valueOf(formatString.charAt(index+1)).equals("9")) {
-				return 1;
-			}else{
-				if (String.valueOf(formatString.charAt(index+16)).equals("9")) {
-					return getRandomOf14();
-				}
-				return getRandomOf34();
-			}
-		}
-	}
-	
-	private int getIndexOfMine() {
-		if (formatString.indexOf("w") != -1) {
-			index = formatString.indexOf("w");
-		} else if (formatString.indexOf("a") != -1) {
-			index = formatString.indexOf("a");
-		}else if (formatString.indexOf("s") != -1) {
-			index = formatString.indexOf("s");
-		}else if (formatString.indexOf("d") != -1) {
-			index = formatString.indexOf("d");
-		}
-		return index;
-	}
-	
-	private int getRandomOf34() {
-		Random rd=new Random();
-		int j=(int)(rd.nextDouble()*10);
-		if (j<6) {
-			return 3;
-		}else {
-			return 4;
-		}
-	}
-	
-	private int getRandomOf14() {
-		Random rd=new Random();
-		int j=(int)(rd.nextDouble()*10);
-		if (j<6) {
-			return 1;
-		}else {
-			return 4;
-		}
-	}
-	
-	private int getRandomOf123() {
-		Random rd=new Random();
-		int j=(int)(rd.nextDouble()*9);
-		if (j<4) {
-			return 1;
-		}else if (j>=4 && j<8) {
-			return 2;
-		}else {
-			return 3;
-		}
 	}
 	
 	class sendMessage extends Thread{
